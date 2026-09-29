@@ -26,7 +26,8 @@ a full-screen section with a Back button:
 - **Minecraft** — server status, TPS, a live server log that scrolls
   upward like in-game chat, and quick actions. Sub-pages for **Players**
   (stats, leaderboard, full **inventories with real item icons**, armour,
-  offhand, ender chest, custom names and enchantments) and **World**
+  offhand, ender chest, custom names and enchantments, plus a confirm-first
+  **Restock** / **Undo** for a player with a saved loadout) and **World**
   (in-game time, weather, game-rule switches, disk usage).
 - **Office** — the room's devices: the **PC** (on/off state, Wake-on-LAN,
   a confirm-first shut down and desk/sim display modes) a **TV remote**

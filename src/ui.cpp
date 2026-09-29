@@ -198,7 +198,8 @@ void confirmThen(const String &id, const String &label) {
   lv_obj_t *m = lv_msgbox_create(nullptr);
   lv_obj_set_width(m, 460);
   lv_msgbox_add_title(m, (label + "?").c_str());
-  lv_msgbox_add_text(m, "This interrupts whatever it's doing for a moment.");
+  lv_msgbox_add_text(m, id.startsWith("mc:restock") ? "Replaces the whole inventory - armour and offhand too."
+                                                     : "This interrupts whatever it's doing for a moment.");
   lv_obj_t *yes = lv_msgbox_add_footer_button(m, "Do it");
   lv_obj_t *no = lv_msgbox_add_footer_button(m, "Cancel");
   lv_obj_set_style_bg_color(no, lv_color_hex(kButton), 0);
@@ -726,6 +727,17 @@ void renderInventory() {
   });
   lv_obj_set_size(toggle, 180, 44);
   lv_obj_set_pos(toggle, kGridX, kGridY + 4 * kStep + 20);
+
+  // Restock / Undo, only for the player Arc has a saved loadout for.
+  if (snap) {
+    int x = kGridX + 190;
+    for (const auto &a : snap->actions) {
+      if (a.id != "mc:restock:" + invName && a.id != "mc:restock-undo:" + invName) continue;
+      lv_obj_t *b = actionButton(pageBody, a, a.id.startsWith("mc:restock:") ? 138 : 108, 44);
+      lv_obj_set_pos(b, x, kGridY + 4 * kStep + 20);
+      x += lv_obj_get_width(b) + 10;
+    }
+  }
 
   invDetail = box(pageBody, 254, 322);
   lv_obj_set_pos(invDetail, kGridX + 8 * kStep + kSlot + 14, kGridY);
@@ -2134,6 +2146,8 @@ void update() {
     if (!ok || !isRemoteKey(lastActionId))
       showToast(message.length() ? message : String(ok ? "Done" : "Failed"), ok ? kOk : kAlert);
     if (openPage == Page::World) net::fetchDetail("/panel/minecraft/world");  // show the rule as it really is now
+    if (ok && openPage == Page::Inventory && lastActionId.startsWith("mc:restock"))
+      net::fetchDetail("/panel/minecraft/inventory/" + invUuid);  // show what's in it now
     if (currentSection == kRacing && openPage == Page::None) fetchRacing();
   }
 
