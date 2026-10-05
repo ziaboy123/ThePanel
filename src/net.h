@@ -59,6 +59,7 @@ struct Snapshot {
   std::vector<PanelAction> actions;
   bool proxmoxConfigured = false;
   bool pcConfigured = false, pcOnline = false;  // the Wake-on-LAN PC, as the network sees it
+  String pcState = "off";                       // on / asleep / off (asleep = Arc put it to sleep)
   // The office TV (the Hisense itself) and its Fire TV Stick, via the backend.
   bool tvConfigured = false, tvMuted = false, fireConfigured = false;
   String tvState, tvSource, fireState, fireApp;

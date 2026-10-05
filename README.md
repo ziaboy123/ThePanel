@@ -29,8 +29,10 @@ a full-screen section with a Back button:
   offhand, ender chest, custom names and enchantments, plus a confirm-first
   **Restock** / **Undo** for a player with a saved loadout) and **World**
   (in-game time, weather, game-rule switches, disk usage).
-- **Office** — the room's devices: the **PC** (on/off state, Wake-on-LAN,
-  a confirm-first shut down and desk/sim display modes) a **TV remote**
+- **Office** — the room's devices: the **PC** (on / asleep / off, one
+  Wake-on-LAN button that powers it on or wakes it, confirm-first sleep and
+  shut down, and desk/sim display modes, sim also opening the racing
+  launcher), a **TV remote**
   (power, volume, inputs such as the consoles, d-pad, home, back,
   play/pause) with a side page for a **streaming stick's own remote**, all
   performed by the backend.

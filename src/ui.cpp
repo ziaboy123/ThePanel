@@ -1055,11 +1055,12 @@ void renderControlsPage(Page page) {
     lv_obj_set_width(pcHint, 336);
     lv_label_set_long_mode(pcHint, LV_LABEL_LONG_WRAP);
     lv_obj_align(pcHint, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    // Right column: Wake, Shut down (confirm-first), then the two display
-    // modes side by side — whichever the backend offers.
+    // Right column: Wake, then Sleep and Shut down (both confirm-first),
+    // then the two display modes — whichever the backend offers.
     struct Slot { const char *id; int x, y, w; };
     const Slot slots[] = {{"office:wake-pc", 392, 0, 384},
-                          {"office:shutdown-pc", 392, 121, 384},
+                          {"office:sleep-pc", 392, 121, 186},
+                          {"office:shutdown-pc", 590, 121, 186},
                           {"office:display-desk", 392, 242, 186},
                           {"office:display-sim", 590, 242, 186}};
     int shown = 0;
@@ -1931,19 +1932,21 @@ void applyActions() {
 
 }
 
-// The PC page's On/Off, from the backend's ~20s check.
+// The PC page's On/Asleep/Off, from the backend's ~20s check.
 void applyPc() {
+  bool asleep = snap->pcState == "asleep";
   if (pcStateLabel) {
-    setText(pcStateLabel, !snap->pcConfigured ? "-" : snap->pcOnline ? "On" : "Off");
-    setTextColor(pcStateLabel, snap->pcOnline ? kOk : kMuted);
+    setText(pcStateLabel, !snap->pcConfigured ? "-" : snap->pcOnline ? "On" : asleep ? "Asleep" : "Off");
+    setTextColor(pcStateLabel, snap->pcOnline ? kOk : asleep ? kWarn : kMuted);
     setText(pcHint, snap->pcOnline ? "Shut down gives a 10-second warning on the PC; cancel it there with "
                                      "shutdown /a."
-                                   : "Wake starts it over the network; it takes about half a minute to boot.");
+                    : asleep       ? "Asleep. Wake brings it back in a few seconds, where you left off."
+                                   : "Power on starts it over the network; it takes about half a minute to boot.");
   }
-  // The button always works: UniFi takes a few minutes to notice a shutdown,
-  // so disabling it while the PC "looks on" would lock you out right after
-  // turning it off, and waking a PC that's already on is harmless.
-  if (wakeLabel) setText(wakeLabel, LV_SYMBOL_POWER " Wake PC");
+  // The button always works (one magic packet both powers on and wakes from
+  // sleep, and sending it to a PC that's already on is harmless); only the
+  // wording follows the state.
+  if (wakeLabel) setText(wakeLabel, snap->pcOnline || asleep ? LV_SYMBOL_POWER " Wake PC" : LV_SYMBOL_POWER " Power on");
 }
 
 String titleCase(String v) {
@@ -2010,7 +2013,7 @@ void applyTiles() {
   else setTile(kHomelab, "All " + String(total) + " checks ok", kOk);
 
   {
-    String office = !snap->pcConfigured ? String("PC -") : snap->pcOnline ? String("PC on") : String("PC off");
+    String office = !snap->pcConfigured ? String("PC -") : String("PC ") + snap->pcState;
     if (snap->tvConfigured) office += String(", TV ") + snap->tvState;
     setTile(kOffice, office, snap->pcOnline || (snap->tvConfigured && snap->tvState != "off") ? kOk : kMuted);
   }
@@ -2032,7 +2035,8 @@ void applyTiles() {
 
   // Office's and Controls' own tiles.
   if (!snap->pcConfigured) setSubTile(officeTileStatus[0], "Not set up", kMuted);
-  else setSubTile(officeTileStatus[0], snap->pcOnline ? "On" : "Off", snap->pcOnline ? kOk : kMuted);
+  else setSubTile(officeTileStatus[0], snap->pcOnline ? "On" : snap->pcState == "asleep" ? "Asleep" : "Off",
+                  snap->pcOnline ? kOk : snap->pcState == "asleep" ? kWarn : kMuted);
   if (!snap->tvConfigured) setSubTile(officeTileStatus[1], "Not set up", kMuted);
   else if (snap->tvState == "on")
     setSubTile(officeTileStatus[1], snap->tvSource.length() ? "On, " + snap->tvSource : String("On"), kOk);
