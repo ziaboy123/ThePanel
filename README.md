@@ -1,4 +1,4 @@
-# ESP32-S3-Touch-LCD-7 — Zia's Panel
+# The Panel
 
 Firmware that turns a **Waveshare ESP32-S3-Touch-LCD-7** (7" 800×480
 capacitive touch screen with an ESP32-S3 on the back) into a wall-mounted

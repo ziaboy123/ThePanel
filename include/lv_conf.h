@@ -1,4 +1,4 @@
-// LVGL 9 config for Zia's Panel. Anything not set here takes
+// LVGL 9 config for The Panel. Anything not set here takes
 // LVGL's own default (lv_conf_internal.h).
 #ifndef LV_CONF_H
 #define LV_CONF_H

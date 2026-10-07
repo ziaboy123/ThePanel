@@ -1,4 +1,4 @@
-// Zia's Panel — a wall-mounted homelab dashboard for the Waveshare
+// The Panel — a wall-mounted homelab dashboard for the Waveshare
 // ESP32-S3-Touch-LCD-7: status, homelab, Proxmox, network, Minecraft and a
 // fixed set of buttons, over a small LAN-only HTTP API. See README.md.
 #include <Arduino.h>

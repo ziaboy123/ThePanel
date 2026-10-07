@@ -1479,7 +1479,7 @@ void buildTopBar(lv_obj_t *parent) {
   lv_obj_set_style_bg_color(mark, lv_color_hex(kAccent), 0);
   lv_obj_set_style_radius(mark, 2, 0);
   // The panel's own name — Arc is the service behind it, this is the screen.
-  lv_obj_t *name = text(brand, &lv_font_montserrat_24, kText, "Zia's Panel");
+  lv_obj_t *name = text(brand, &lv_font_montserrat_24, kText, "The Panel");
   lv_obj_set_style_text_letter_space(name, 1, 0);
 
   pill = text(topBar, &lv_font_montserrat_16, kText, "Starting...");
