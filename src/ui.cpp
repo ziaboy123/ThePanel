@@ -217,20 +217,6 @@ void confirmThen(const String &id, const String &label) {
   }, LV_EVENT_CLICKED, nullptr);
 }
 
-// The backend was renamed Arc -> Umbros; its own actions are "arc:<x>" on
-// older builds and "umbros:<x>" on newer ones. Match either.
-bool isOwnAction(const String &id, const char *name) {
-  return id == String("umbros:") + name || id == String("arc:") + name;
-}
-
-// The id the backend currently offers for one of its own actions.
-String ownActionId(const char *name) {
-  if (snap)
-    for (const auto &a : snap->actions)
-      if (isOwnAction(a.id, name)) return a.id;
-  return String("umbros:") + name;
-}
-
 lv_obj_t *actionButton(lv_obj_t *parent, const PanelAction &a, int w, int h) {
   lv_obj_t *b = lv_button_create(parent);
   lv_obj_set_size(b, w, h);
@@ -248,7 +234,7 @@ lv_obj_t *actionButton(lv_obj_t *parent, const PanelAction &a, int w, int h) {
     if (payload.endsWith("1")) confirmThen(id, label);
     else run(id, label);
   }, LV_EVENT_CLICKED, payload);
-  if (isOwnAction(a.id, "quiet")) track(l, &quietLabel);
+  if (a.id == "umbros:quiet") track(l, &quietLabel);
   if (a.id == "office:wake-pc") {
     track(b, &wakeButton);
     track(l, &wakeLabel);
@@ -1037,8 +1023,7 @@ void applyPc();
 void applyTv();
 void applyQuiet();
 
-// alsoGroup: a second group name to accept (the backend's old name).
-lv_obj_t *actionGrid(const char *group, int w, int h, const char *alsoGroup = nullptr) {
+lv_obj_t *actionGrid(const char *group, int w, int h) {
   lv_obj_t *grid = bare(pageBody);
   lv_obj_set_size(grid, 776, 352);
   lv_obj_set_flex_flow(grid, LV_FLEX_FLOW_ROW_WRAP);
@@ -1047,7 +1032,7 @@ lv_obj_t *actionGrid(const char *group, int w, int h, const char *alsoGroup = nu
   lv_obj_add_flag(grid, LV_OBJ_FLAG_SCROLLABLE);
   int count = 0;
   for (const auto &a : snap->actions)
-    if (a.group == group || (alsoGroup && a.group == alsoGroup)) {
+    if (a.group == group) {
       actionButton(grid, a, w, h);
       count++;
     }
@@ -1165,7 +1150,7 @@ void renderControlsPage(Page page) {
     if (!shown) lv_obj_set_pos(text(pageBody, &lv_font_montserrat_20, kMuted, "TV controls aren't set up."), 270, 20);
     applyTv();
   } else if (page == Page::UmbrosTools) {
-    actionGrid("Umbros", 382, 110, "Arc");
+    actionGrid("Umbros", 382, 110);
     applyQuiet();
   } else if (page == Page::Restarts) {
     actionGrid("Restart", 184, 80);
@@ -1525,7 +1510,7 @@ void buildOverview(lv_obj_t *tab) {
   lv_obj_set_style_pad_all(statusCard, 20, 0);
   lv_obj_add_flag(statusCard, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_event_cb(statusCard, [](lv_event_t *) {
-    if (snap && snap->unacked > 0) run(ownActionId("ack"), "Acknowledge");
+    if (snap && snap->unacked > 0) run("umbros:ack", "Acknowledge");
   }, LV_EVENT_CLICKED, nullptr);
 
   statusTitle = text(statusCard, &lv_font_montserrat_36, kText, "Waiting for Umbros");
@@ -1898,7 +1883,7 @@ void applyMcLog() {
     const McLogLine &l = *it;
     uint32_t color = kText;
     String line = l.time + "  ";
-    if (l.kind == "umbros" || l.kind == "arc") color = 0x22D3EE, line += "[" + l.player + "] " + l.text;  // aqua, like the in-game [Umbros] tag
+    if (l.kind == "umbros") color = 0x22D3EE, line += "[" + l.player + "] " + l.text;  // aqua, like the in-game [Umbros] tag
     else if (l.kind == "chat") line += "<" + l.player + "> " + l.text;
     else if (l.kind == "command") color = 0xC084FC, line += l.player + " " + l.text;
     else if (l.kind == "join") color = kOk, line += l.player + " joined";
