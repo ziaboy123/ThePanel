@@ -1776,8 +1776,11 @@ void buildMain() {
   lv_obj_set_style_radius(toast, 12, 0);
   lv_obj_set_style_pad_hor(toast, 18, 0);
   lv_obj_set_style_pad_ver(toast, 10, 0);
+  // Sized to its text, wrapping past 700px. Not LONG_DOT: with only a
+  // max-width (no real width) that collapses to a sliver (see README).
   lv_obj_set_style_max_width(toast, 700, 0);
-  lv_label_set_long_mode(toast, LV_LABEL_LONG_DOT);
+  lv_label_set_long_mode(toast, LV_LABEL_LONG_WRAP);
+  lv_obj_set_style_text_align(toast, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_align(toast, LV_ALIGN_BOTTOM_MID, 0, -20);
   lv_obj_add_flag(toast, LV_OBJ_FLAG_HIDDEN);
   toastTimer = lv_timer_create([](lv_timer_t *t) {
