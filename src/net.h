@@ -1,4 +1,4 @@
-// Everything that talks to the outside world — Wi-Fi and Arc's /panel API —
+// Everything that talks to the outside world — Wi-Fi and Umbros's /panel API —
 // runs on its own FreeRTOS task on core 0, so a slow request never stalls
 // the UI (LVGL stays on core 1 in loop()). The UI only ever sees immutable
 // snapshots handed across under a mutex.
@@ -41,8 +41,8 @@ struct PanelAction {
 
 // One /panel/state response, parsed. Never mutated after it's published.
 struct Snapshot {
-  String name = "Arc";
-  String firmware;  // MD5 of the build Arc holds for this panel
+  String name = "Umbros";
+  String firmware;  // MD5 of the build Umbros holds for this panel
   String time, date, summary;
   bool ready = false, ok = true;
   int unacked = 0, quietSeconds = 0;
@@ -59,7 +59,7 @@ struct Snapshot {
   std::vector<PanelAction> actions;
   bool proxmoxConfigured = false;
   bool pcConfigured = false, pcOnline = false;  // the Wake-on-LAN PC, as the network sees it
-  String pcState = "off";                       // on / asleep / off (asleep = Arc put it to sleep)
+  String pcState = "off";                       // on / asleep / off (asleep = Umbros put it to sleep)
   // The office TV (the Hisense itself) and its Fire TV Stick, via the backend.
   bool tvConfigured = false, tvMuted = false, fireConfigured = false;
   String tvState, tvSource, fireState, fireApp;
@@ -71,7 +71,7 @@ struct Snapshot {
   bool racingLive = false;
   String racingTrack;
   int racingLaps = 0;
-  // Live counts from Arc's 30s Proxmox sense, for the home tile.
+  // Live counts from Umbros's 30s Proxmox sense, for the home tile.
   int pxHostsUp = 0, pxHosts = 0, pxGuestsRunning = 0, pxGuests = 0, pxProblems = 0;
   // Network (UniFi): WAN status, live rates in kbps, ~30 min of history.
   bool netReady = false, netOnline = false;
@@ -96,11 +96,11 @@ uint32_t generation();
 
 WifiState wifiState();
 String wifiSsid();
-// A fetch succeeded recently — false means Arc (or the network) is down.
-bool arcReachable();
+// A fetch succeeded recently — false means Umbros (or the network) is down.
+bool umbrosReachable();
 
 void requestRefresh();
-// Downloading a new build from Arc (it restarts itself when done).
+// Downloading a new build from Umbros (it restarts itself when done).
 bool updatingFirmware();
 void runAction(const String &id);
 // POST any backend path (e.g. /panel/racing/select/<id>); its {ok, message}

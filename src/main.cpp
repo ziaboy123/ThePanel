@@ -11,18 +11,18 @@
 void setup() {
   Serial.begin(115200);
   delay(300);
-  Serial.println("[arc-panel] booting");
+  Serial.println("[panel] booting");
   if (!board::begin()) {
     for (;;) delay(1000);
   }
-  Serial.println("[arc-panel] board up");
+  Serial.println("[panel] board up");
   net::begin();
-  Serial.println("[arc-panel] net started");
+  Serial.println("[panel] net started");
   ui::begin();
-  Serial.println("[arc-panel] ui built");
+  Serial.println("[panel] ui built");
   lv_timer_handler();  // draw once before the backlight comes up
   board::setBacklight(true);
-  Serial.println("[arc-panel] ready");
+  Serial.println("[panel] ready");
 }
 
 void loop() {
@@ -32,8 +32,8 @@ void loop() {
   static uint32_t lastBeat = 0;
   if (millis() - lastBeat > 5000) {
     lastBeat = millis();
-    Serial.printf("[arc-panel] up %lus, wifi %d, arc %s, heap %u, psram %u\n", millis() / 1000,
-                  (int)net::wifiState(), net::arcReachable() ? "ok" : "unreachable",
+    Serial.printf("[panel] up %lus, wifi %d, umbros %s, heap %u, psram %u\n", millis() / 1000,
+                  (int)net::wifiState(), net::umbrosReachable() ? "ok" : "unreachable",
                   ESP.getFreeHeap(), ESP.getFreePsram());
   }
   ui::update();

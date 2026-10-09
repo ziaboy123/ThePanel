@@ -217,6 +217,20 @@ void confirmThen(const String &id, const String &label) {
   }, LV_EVENT_CLICKED, nullptr);
 }
 
+// The backend was renamed Arc -> Umbros; its own actions are "arc:<x>" on
+// older builds and "umbros:<x>" on newer ones. Match either.
+bool isOwnAction(const String &id, const char *name) {
+  return id == String("umbros:") + name || id == String("arc:") + name;
+}
+
+// The id the backend currently offers for one of its own actions.
+String ownActionId(const char *name) {
+  if (snap)
+    for (const auto &a : snap->actions)
+      if (isOwnAction(a.id, name)) return a.id;
+  return String("umbros:") + name;
+}
+
 lv_obj_t *actionButton(lv_obj_t *parent, const PanelAction &a, int w, int h) {
   lv_obj_t *b = lv_button_create(parent);
   lv_obj_set_size(b, w, h);
@@ -234,7 +248,7 @@ lv_obj_t *actionButton(lv_obj_t *parent, const PanelAction &a, int w, int h) {
     if (payload.endsWith("1")) confirmThen(id, label);
     else run(id, label);
   }, LV_EVENT_CLICKED, payload);
-  if (a.id == "arc:quiet") track(l, &quietLabel);
+  if (isOwnAction(a.id, "quiet")) track(l, &quietLabel);
   if (a.id == "office:wake-pc") {
     track(b, &wakeButton);
     track(l, &wakeLabel);
@@ -333,10 +347,10 @@ void showWifiSetup() {
 
 // --- Minecraft sub-pages (Players, World) -----------------------------------
 // Full-screen layers over the tabs, opened from the Minecraft page, closed
-// with Back. Data comes from Arc (which reads it through Beacon), fetched
+// with Back. Data comes from Umbros (which reads it through Beacon), fetched
 // only while a page is open.
 
-enum class Page { None, Players, World, Inventory, Pc, Tv, FireStick, ArcTools, Restarts, PanelSettings };
+enum class Page { None, Players, World, Inventory, Pc, Tv, FireStick, UmbrosTools, Restarts, PanelSettings };
 Page openPage = Page::None;
 lv_obj_t *pageLayer, *pageTitle, *pageBody;
 uint32_t pageFetchedAt = 0;
@@ -542,7 +556,7 @@ void renderPlayers() {
 // Inventory ------------------------------------------------------------------
 // Minecraft-style: armour and offhand down the left, main inventory over the
 // hotbar, ender chest on a toggle, and a detail card for the tapped item
-// (custom name, enchantments, trim, potion). Icons arrive inline from Arc as
+// (custom name, enchantments, trim, potion). Icons arrive inline from Umbros as
 // 16x16 PNGs; each is decoded once, upscaled 2x with nearest-neighbour (crisp
 // pixels, like the game) and cached for the life of the panel.
 
@@ -728,7 +742,7 @@ void renderInventory() {
   lv_obj_set_size(toggle, 180, 44);
   lv_obj_set_pos(toggle, kGridX, kGridY + 4 * kStep + 20);
 
-  // Restock / Undo, only for the player Arc has a saved loadout for.
+  // Restock / Undo, only for the player Umbros has a saved loadout for.
   if (snap) {
     int x = kGridX + 190;
     for (const auto &a : snap->actions) {
@@ -836,7 +850,7 @@ void renderWorld(JsonDocument &doc) {
 
 // Network ------------------------------------------------------------------
 // Internet status, live throughput with a ~30 minute graph, and the busiest
-// devices right now — all from Arc's network sense (UniFi), in the 5s state.
+// devices right now — all from Umbros's network sense (UniFi), in the 5s state.
 
 lv_obj_t *netStatus, *netFacts, *netDownLabel, *netUpLabel, *netChart, *netDeviceList;
 lv_chart_series_t *netDownSeries, *netUpSeries;
@@ -923,7 +937,7 @@ void applyNetwork() {
 
 // Proxmox ------------------------------------------------------------------
 // Hosts across the top (CPU/RAM/disk bars), every container and VM below.
-// Fetched from Arc only while the section is open (read-only API token).
+// Fetched from Umbros only while the section is open (read-only API token).
 
 lv_obj_t *proxmoxBody, *homelabBody;  // Proxmox sits at the top of the scrolling Homelab section
 JsonDocument proxmoxDoc;
@@ -1023,7 +1037,8 @@ void applyPc();
 void applyTv();
 void applyQuiet();
 
-lv_obj_t *actionGrid(const char *group, int w, int h) {
+// alsoGroup: a second group name to accept (the backend's old name).
+lv_obj_t *actionGrid(const char *group, int w, int h, const char *alsoGroup = nullptr) {
   lv_obj_t *grid = bare(pageBody);
   lv_obj_set_size(grid, 776, 352);
   lv_obj_set_flex_flow(grid, LV_FLEX_FLOW_ROW_WRAP);
@@ -1032,7 +1047,7 @@ lv_obj_t *actionGrid(const char *group, int w, int h) {
   lv_obj_add_flag(grid, LV_OBJ_FLAG_SCROLLABLE);
   int count = 0;
   for (const auto &a : snap->actions)
-    if (a.group == group) {
+    if (a.group == group || (alsoGroup && a.group == alsoGroup)) {
       actionButton(grid, a, w, h);
       count++;
     }
@@ -1043,7 +1058,7 @@ lv_obj_t *actionGrid(const char *group, int w, int h) {
 void renderControlsPage(Page page) {
   lv_obj_clean(pageBody);
   worldClock = nullptr;
-  if (!snap) return pageMessage("Waiting for Arc...");
+  if (!snap) return pageMessage("Waiting for Umbros...");
 
   if (page == Page::Pc) {
     lv_obj_t *card = box(pageBody, 380, 352);
@@ -1149,8 +1164,8 @@ void renderControlsPage(Page page) {
     }
     if (!shown) lv_obj_set_pos(text(pageBody, &lv_font_montserrat_20, kMuted, "TV controls aren't set up."), 270, 20);
     applyTv();
-  } else if (page == Page::ArcTools) {
-    actionGrid("Arc", 382, 110);
+  } else if (page == Page::UmbrosTools) {
+    actionGrid("Umbros", 382, 110, "Arc");
     applyQuiet();
   } else if (page == Page::Restarts) {
     actionGrid("Restart", 184, 80);
@@ -1177,7 +1192,7 @@ void openControls(Page page) {
   const char *title = page == Page::Pc         ? "PC"
                       : page == Page::Tv       ? "TV"
                       : page == Page::FireStick ? "Fire Stick"
-                      : page == Page::ArcTools ? "Arc"
+                      : page == Page::UmbrosTools ? "Umbros"
                       : page == Page::Restarts ? "Restarts"
                                                : "Panel";
   showPage(page, title);
@@ -1438,21 +1453,21 @@ void handleDetail() {
     if (inventory && status == 404)
       pageMessage((invName + " hasn't joined this server yet,\nso there's no inventory to show.").c_str());
     else
-      pageMessage(status == 502 ? "Beacon didn't answer - is it running?" : "Couldn't reach Arc.");
+      pageMessage(status == 502 ? "Beacon didn't answer - is it running?" : "Couldn't reach Umbros.");
     return;
   }
   if (players) {
     playersDoc.clear();
-    if (deserializeJson(playersDoc, body)) return pageMessage("Got an unreadable reply from Arc.");
+    if (deserializeJson(playersDoc, body)) return pageMessage("Got an unreadable reply from Umbros.");
     renderPlayers();
   } else if (inventory) {
     invDoc.clear();
-    if (deserializeJson(invDoc, body)) return pageMessage("Got an unreadable reply from Arc.");
+    if (deserializeJson(invDoc, body)) return pageMessage("Got an unreadable reply from Umbros.");
     cacheIcons();
     renderInventory();
   } else if (world) {
     JsonDocument doc;
-    if (deserializeJson(doc, body)) return pageMessage("Got an unreadable reply from Arc.");
+    if (deserializeJson(doc, body)) return pageMessage("Got an unreadable reply from Umbros.");
     renderWorld(doc);
   }
 }
@@ -1478,7 +1493,7 @@ void buildTopBar(lv_obj_t *parent) {
   lv_obj_set_style_bg_opa(mark, LV_OPA_COVER, 0);
   lv_obj_set_style_bg_color(mark, lv_color_hex(kAccent), 0);
   lv_obj_set_style_radius(mark, 2, 0);
-  // The panel's own name — Arc is the service behind it, this is the screen.
+  // The panel's own name — Umbros is the service behind it, this is the screen.
   lv_obj_t *name = text(brand, &lv_font_montserrat_24, kText, "The Panel");
   lv_obj_set_style_text_letter_space(name, 1, 0);
 
@@ -1510,10 +1525,10 @@ void buildOverview(lv_obj_t *tab) {
   lv_obj_set_style_pad_all(statusCard, 20, 0);
   lv_obj_add_flag(statusCard, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_event_cb(statusCard, [](lv_event_t *) {
-    if (snap && snap->unacked > 0) run("arc:ack", "Acknowledge");
+    if (snap && snap->unacked > 0) run(ownActionId("ack"), "Acknowledge");
   }, LV_EVENT_CLICKED, nullptr);
 
-  statusTitle = text(statusCard, &lv_font_montserrat_36, kText, "Waiting for Arc");
+  statusTitle = text(statusCard, &lv_font_montserrat_36, kText, "Waiting for Umbros");
   statusSummary = text(statusCard, &lv_font_montserrat_20, kText, "");
   lv_obj_set_width(statusSummary, 400);
   lv_label_set_long_mode(statusSummary, LV_LABEL_LONG_DOT);
@@ -1621,10 +1636,10 @@ void buildOffice(lv_obj_t *tab) {
   officeTileStatus[1] = subTile(tab, 1, ICON_TV, "TV", Page::Tv, &icons_28);
 }
 
-// Controls: Arc, restarts and the panel itself.
+// Controls: Umbros, restarts and the panel itself.
 void buildControls(lv_obj_t *tab) {
   lv_obj_remove_flag(tab, LV_OBJ_FLAG_SCROLLABLE);
-  controlTileStatus[0] = subTile(tab, 0, ICON_ARC, "Arc", Page::ArcTools, &icons_28);
+  controlTileStatus[0] = subTile(tab, 0, ICON_UMBROS, "Umbros", Page::UmbrosTools, &icons_28);
   controlTileStatus[1] = subTile(tab, 1, ICON_RESTARTS, "Restarts", Page::Restarts, &icons_28);
   controlTileStatus[2] = subTile(tab, 2, ICON_PANEL, "Panel", Page::PanelSettings, &icons_28);
 }
@@ -1779,7 +1794,7 @@ void applyStatus() {
   String title, summary = snap->summary, detail;
   if (!snap->ready) {
     title = "Warming up";
-    summary = "Arc hasn't finished its first checks yet.";
+    summary = "Umbros hasn't finished its first checks yet.";
   } else if (snap->alerts.empty()) {
     title = "All clear";
     border = 0x14532D, bg = 0x0B1A10, titleColor = kOk;
@@ -1880,7 +1895,7 @@ void applyMcLog() {
     const McLogLine &l = *it;
     uint32_t color = kText;
     String line = l.time + "  ";
-    if (l.kind == "arc") color = 0x22D3EE, line += "[" + l.player + "] " + l.text;  // aqua, like the in-game [Arc] tag
+    if (l.kind == "umbros" || l.kind == "arc") color = 0x22D3EE, line += "[" + l.player + "] " + l.text;  // aqua, like the in-game [Umbros] tag
     else if (l.kind == "chat") line += "<" + l.player + "> " + l.text;
     else if (l.kind == "command") color = 0xC084FC, line += l.player + " " + l.text;
     else if (l.kind == "join") color = kOk, line += l.player + " joined";
@@ -2051,7 +2066,7 @@ void applyTiles() {
   setSubTile(controlTileStatus[1], String(restarts) + " services", kMuted);
   setSubTile(controlTileStatus[2], "Wi-Fi " + net::wifiSsid(), kMuted);
 
-  setTile(kControls, snap->quietSeconds > 0 ? String("Quiet mode on") : String("Arc, restarts, panel"),
+  setTile(kControls, snap->quietSeconds > 0 ? String("Quiet mode on") : String("Umbros, restarts, panel"),
           snap->quietSeconds > 0 ? kWarn : kMuted);
 }
 
@@ -2071,7 +2086,7 @@ void applyTopBar() {
   if (net::updatingFirmware()) setPill("Updating firmware...", 0x0C2A3A, 0x7DD3FC);
   else if (wifi == net::WifiState::NoCredentials) setPill("Wi-Fi not set up", 0x3A2A06, kWarn);
   else if (wifi == net::WifiState::Connecting) setPill("Connecting to " + net::wifiSsid(), 0x3A2A06, kWarn);
-  else if (!net::arcReachable()) setPill(snap ? "Arc unreachable" : "Reaching Arc...", 0x2A2A2E, kMuted);
+  else if (!net::umbrosReachable()) setPill(snap ? "Umbros unreachable" : "Reaching Umbros...", 0x2A2A2E, kMuted);
   else if (!snap->ready) setPill("Warming up", 0x2A2A2E, kMuted);
   else if (alerting) setPill(snap->summary, kAlert, 0xFFFFFF);
   else if (!snap->ok) setPill(snap->summary, 0x3A2A06, kWarn);

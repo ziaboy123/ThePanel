@@ -6,7 +6,7 @@ dashboard for a homelab. It runs directly on the chip: no OS, no browser,
 just C++ on Arduino / ESP-IDF 5 with **LVGL 9** for the UI.
 
 The panel is a thin client. It polls a small LAN-only HTTP API on my
-homelab service (Arc), draws what it's told, and sends button presses back
+homelab service (Umbros), draws what it's told, and sends button presses back
 as fixed action IDs. It never holds infrastructure credentials and can
 never send an arbitrary command.
 
@@ -45,7 +45,7 @@ a full-screen section with a Back button:
   record to beat; below, every recorded lap (time, car, track) newest
   first with the best on each car/track marked, clearable whenever. Laps
   are recorded by the backend from AC's UDP telemetry.
-- **Controls** — **Arc** (check now, acknowledge, quiet mode, briefing),
+- **Controls** — **Umbros** (check now, acknowledge, quiet mode, briefing),
   **Restarts** (confirm-first service restarts) and **Panel** (Wi-Fi setup,
   screen off, firmware and address).
 

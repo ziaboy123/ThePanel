@@ -54,7 +54,7 @@ uint32_t parseColor(const char *hex) {
 
 std::shared_ptr<Snapshot> parse(JsonDocument &doc) {
   auto s = std::make_shared<Snapshot>();
-  s->name = doc["name"] | "Arc";
+  s->name = doc["name"] | "Umbros";
   s->time = doc["time"] | "";
   s->date = doc["date"] | "";
   s->summary = doc["summary"] | "";
@@ -128,8 +128,8 @@ bool fetchState() {
   WiFiClient client;
   HTTPClient http;
   http.setTimeout(kHttpTimeoutMs);
-  if (!http.begin(client, String(ARC_URL) + "/panel/state")) return false;
-  http.addHeader("Authorization", String("Bearer ") + ARC_PANEL_TOKEN);
+  if (!http.begin(client, String(UMBROS_URL) + "/panel/state")) return false;
+  http.addHeader("Authorization", String("Bearer ") + UMBROS_PANEL_TOKEN);
   int code = http.GET();
   if (code != 200) {
     Serial.printf("[net] state: HTTP %d\n", code);
@@ -157,8 +157,8 @@ void postAction(const char *path) {
   WiFiClient client;
   HTTPClient http;
   http.setTimeout(30000);  // synchronous restarts can take a few seconds
-  if (http.begin(client, String(ARC_URL) + path)) {
-    http.addHeader("Authorization", String("Bearer ") + ARC_PANEL_TOKEN);
+  if (http.begin(client, String(UMBROS_URL) + path)) {
+    http.addHeader("Authorization", String("Bearer ") + UMBROS_PANEL_TOKEN);
     int code = http.POST("");
     if (code == 200) {
       JsonDocument doc;
@@ -167,7 +167,7 @@ void postAction(const char *path) {
         message = doc["message"] | "";
       }
     } else {
-      message = code > 0 ? "Arc said HTTP " + String(code) : "Couldn't reach Arc";
+      message = code > 0 ? "Umbros said HTTP " + String(code) : "Couldn't reach Umbros";
     }
     http.end();
   }
@@ -178,7 +178,7 @@ void postAction(const char *path) {
   resultMessage = message;
 }
 
-// Self-update, pulled from Arc (see README, "Updates"). Arc advertises the MD5
+// Self-update, pulled from Umbros (see README, "Updates"). Umbros advertises the MD5
 // of the build it holds; when that differs from what's running, download
 // it and restart. The restart is a software one, which matters on this
 // board: a hardware reset while the panel is lit samples GPIO0 (shared
@@ -203,8 +203,8 @@ void maybeUpdate(const String &advertised) {
   WiFiClient client;
   HTTPClient http;
   http.setTimeout(30000);
-  http.begin(client, String(ARC_URL) + "/panel/firmware");
-  http.addHeader("Authorization", String("Bearer ") + ARC_PANEL_TOKEN);
+  http.begin(client, String(UMBROS_URL) + "/panel/firmware");
+  http.addHeader("Authorization", String("Bearer ") + UMBROS_PANEL_TOKEN);
   httpUpdate.rebootOnUpdate(false);
   t_httpUpdate_return result = httpUpdate.update(http);
   if (result == HTTP_UPDATE_OK) {
@@ -232,8 +232,8 @@ void fetchWantedDetail() {
   http.setTimeout(25000);  // Players reads five stats files through Beacon
   int status = -1;
   String body;
-  if (http.begin(client, String(ARC_URL) + path)) {
-    http.addHeader("Authorization", String("Bearer ") + ARC_PANEL_TOKEN);
+  if (http.begin(client, String(UMBROS_URL) + path)) {
+    http.addHeader("Authorization", String("Bearer ") + UMBROS_PANEL_TOKEN);
     status = http.GET();
     if (status > 0) body = http.getString();
     http.end();
@@ -263,7 +263,7 @@ void connect() {
 
 void task(void *) {
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname("arc-panel");
+  WiFi.setHostname("umbros-panel");
   // Modem sleep adds latency to every poll and is known to worsen this
   // board's display drift; the panel is mains-powered anyway.
   WiFi.setSleep(false);
@@ -337,7 +337,7 @@ WifiState wifiState() {
 
 String wifiSsid() { return ssid; }
 
-bool arcReachable() {
+bool umbrosReachable() {
   Guard g;
   return lastSuccess && millis() - lastSuccess < kStaleMs;
 }
