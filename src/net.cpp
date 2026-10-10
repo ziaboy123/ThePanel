@@ -5,6 +5,7 @@
 #include <HTTPUpdate.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <esp_heap_caps.h>
 
 #include "secrets.h"
 
@@ -128,7 +129,17 @@ bool fetchState() {
   WiFiClient client;
   HTTPClient http;
   http.setTimeout(kHttpTimeoutMs);
-  if (!http.begin(client, String(UMBROS_URL) + "/panel/state")) return false;
+  // Health rides along as query parameters (ignored by the API, but the
+  // backend's access log keeps them), so memory trouble can be spotted
+  // without a USB cable: uptime, free / smallest-ever-free / largest block
+  // of internal RAM, and free PSRAM, in KB.
+  char health[112];
+  snprintf(health, sizeof health, "?up=%lu&ram=%u&ramMin=%u&ramBlock=%u&psram=%u", millis() / 1000,
+           heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024,
+           heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL) / 1024,
+           heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) / 1024,
+           heap_caps_get_free_size(MALLOC_CAP_SPIRAM) / 1024);
+  if (!http.begin(client, String(UMBROS_URL) + "/panel/state" + health)) return false;
   http.addHeader("Authorization", String("Bearer ") + UMBROS_PANEL_TOKEN);
   int code = http.GET();
   if (code != 200) {
