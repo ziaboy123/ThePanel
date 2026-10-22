@@ -132,8 +132,15 @@ All endpoints take `Authorization: Bearer <token>`.
 
 ## Credits
 
-Tile icons come from [Font Awesome Free](https://fontawesome.com) (icons
-CC BY 4.0, see fontawesome.com/license/free) and
-[Material Design Icons](https://pictogrammers.com/library/mdi/) (Apache-2.0),
-converted to an LVGL font (`src/icons_28.c`) with
-[lv_font_conv](https://github.com/lvgl/lv_font_conv).
+Tile icons are glyphs from the [Font Awesome Free](https://fontawesome.com)
+font files (SIL Open Font License 1.1) and the
+[Material Design Icons](https://pictogrammers.com/library/mdi/) webfont
+(Apache License 2.0). They're converted to LVGL fonts (`src/icons_28.c`,
+`src/icons_racing_40.c`) with [lv_font_conv](https://github.com/lvgl/lv_font_conv).
+Those two files stay under the fonts' licences. Copyright notices and the full
+licence texts are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+To add an icon, add its codepoint to `gen-icons.sh` and a `#define` to
+`src/icons.h`, then run `./gen-icons.sh` (needs Node). It fetches the fonts,
+regenerates both files and puts the licence header back on each one, because
+lv_font_conv overwrites the whole file.

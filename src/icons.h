@@ -1,7 +1,8 @@
 // Home and section icons, as UTF-8 strings for the icons_28 font
 // (src/icons_28.c, generated with lv_font_conv at 28px, 4bpp).
-// Font Awesome Free (fontawesome.com/license/free, icons CC BY 4.0) and
-// Material Design Icons (pictogrammers.com, Apache-2.0).
+// Glyphs from the Font Awesome Free font files (SIL OFL 1.1) and the
+// Material Design Icons webfont (Apache-2.0); see THIRD_PARTY_NOTICES.md.
+// Regenerate the font with gen-icons.sh after adding a codepoint there.
 #pragma once
 
 #include <lvgl.h>
