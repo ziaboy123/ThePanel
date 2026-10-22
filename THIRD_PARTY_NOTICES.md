@@ -4,7 +4,8 @@ The icon fonts in `src/icons_28.c` and `src/icons_racing_40.c` are built from
 other people's font files. Each one is a modified version of those fonts (a
 subset of their glyphs, converted by [lv_font_conv](https://github.com/lvgl/lv_font_conv)
 into an LVGL bitmap font) and stays under the fonts' own licences below, not
-under the terms of the rest of this repository. They are regenerated with
+under this repository's MIT licence ([LICENSE](LICENSE)), which covers
+everything else. They are regenerated with
 `gen-icons.sh`, which also writes the licence header at the top of each file.
 
 | File | Glyphs from | Licence |

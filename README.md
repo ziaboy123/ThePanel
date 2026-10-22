@@ -144,3 +144,9 @@ To add an icon, add its codepoint to `gen-icons.sh` and a `#define` to
 `src/icons.h`, then run `./gen-icons.sh` (needs Node). It fetches the fonts,
 regenerates both files and puts the licence header back on each one, because
 lv_font_conv overwrites the whole file.
+
+## Licence
+
+[MIT](LICENSE), except the two generated icon fonts (`src/icons_28.c`,
+`src/icons_racing_40.c`), which stay under their fonts' licences (SIL OFL 1.1
+and Apache-2.0, see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
