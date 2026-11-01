@@ -1360,7 +1360,7 @@ void renderRacing(JsonDocument &doc) {
     setText(raceWhere, (String((const char *)(live["car"] | "")) + "\n" + (const char *)(live["track"] | "")).c_str());
     raceLapMs = live["lap_ms"] | 0;
     raceAgeMs = live["age_ms"] | 0;
-    String stats = "Lap " + String((int)(live["lap"] | 1)) + "   " + String((int)(live["speed"] | 0)) + " km/h  " +
+    String stats = "Lap " + String((int)(live["lap"] | 1)) + "   " + String((int)((int)(live["speed"] | 0) * 0.621371f + 0.5f)) + " mph  " +  // Assetto Corsa reports km/h
                    (const char *)(live["gear"] | "") + "\nLast    " + (const char *)(live["last"] | "-") +
                    "\nBest    " + (const char *)(live["session_best"] | "-") + "\nRecord " + (const char *)(live["record"] | "-");
     setText(raceStats, stats.c_str());
